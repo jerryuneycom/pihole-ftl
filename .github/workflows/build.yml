@@ -123,5 +123,5 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
-          name: tmp-binary-storage
+          name: tmp-binary-storage-jerry
           path: '${{ matrix.bin_name }}*'
