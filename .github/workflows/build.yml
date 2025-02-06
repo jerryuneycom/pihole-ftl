@@ -123,7 +123,6 @@ jobs:
         #   path: '${{ matrix.bin_name }}*'
       -
         name: Attach binaries to release
-        if: inputs.event_name == 'release'
         uses: softprops/action-gh-release@v2
         with:
           files: |
