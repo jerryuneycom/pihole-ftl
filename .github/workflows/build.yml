@@ -125,3 +125,4 @@ jobs:
         with:
           name: tmp-binary-storage-jerry
           path: '${{ matrix.bin_name }}*'
+          overwrite: true
