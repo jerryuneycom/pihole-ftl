@@ -132,3 +132,4 @@ jobs:
           files: |
             ${{ matrix.bin_name }}
             ${{ matrix.bin_name }}.sha1
+          token: ${{ github.token }}
