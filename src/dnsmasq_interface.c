@@ -299,6 +299,12 @@ size_t _FTL_make_answer(struct dns_header *header, char *limit, const size_t len
 				logg("Configured blocking mode is NODATA%s",
 				     config.blockingmode == MODE_IP_NODATA_AAAA ? "-IPv6" : "");
 		}
+		else if (config.blockingmode == MODE_CNAME)
+		{
+			// If we block in CNAME mode, we set flags to CNAME
+			flags = F_CNAME;
+			logg("Configured blocking mode is CNAME");
+		}
 	}
 
 	// Check for regex redirecting
@@ -414,6 +420,15 @@ size_t _FTL_make_answer(struct dns_header *header, char *limit, const size_t len
 		                       &p, hostname ? daemon->local_ttl : config.block_ttl,
 		                       NULL, T_AAAA, C_IN, (char*)"6", &addr.addr6))
 			log_query(flags & ~F_IPV4, name, &addr, (char*)blockingreason, 0);
+	}
+
+	if (flags & F_CNAME)
+	{
+		// Add CNAME answer record
+		header->ancount = htons(ntohs(header->ancount) + 1);
+		if(add_resource_record(header, limit, &trunc, sizeof(struct dns_header),
+		                       &p, daemon->local_ttl, NULL, T_CNAME, C_IN, (char*)"d", (char*)config.reply_addr.cname_blocking))
+			log_query(flags, name, NULL, (char*)blockingreason, 0);
 	}
 
 	// Log empty replies
