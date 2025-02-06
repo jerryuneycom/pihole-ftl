@@ -616,7 +616,8 @@ static void initConfig(struct config *conf)
 			{ get_blocking_mode_str(MODE_IP_NODATA_AAAA), "In IP-NODATA-AAAA mode, blocked queries will be answered with the local IPv4 addresses of your Pi-hole. Blocked AAAA queries will be answered with NODATA-IPV6 and clients will only try to reach your Pi-hole over its static IPv4 address." },
 			{ get_blocking_mode_str(MODE_IP), "In IP mode, blocked queries will be answered with the local IP addresses of your Pi-hole." },
 			{ get_blocking_mode_str(MODE_NX), "In NXDOMAIN mode, blocked queries will be answered with an empty response (i.e., there won't be an answer section) and status NXDOMAIN. A NXDOMAIN response should indicate that there is no such domain to the client making the query." },
-			{ get_blocking_mode_str(MODE_NODATA), "In NODATA mode, blocked queries will be answered with an empty response (no answer section) and status NODATA. A NODATA response indicates that the domain exists, but there is no record for the requested query type." }
+			{ get_blocking_mode_str(MODE_NODATA), "In NODATA mode, blocked queries will be answered with an empty response (no answer section) and status NODATA. A NODATA response indicates that the domain exists, but there is no record for the requested query type." },
+			{ get_blocking_mode_str(MODE_CNAME), "In CNAME mode, blocked queries will be answered with the domain that is setup" }
 		};
 		CONFIG_ADD_ENUM_OPTIONS(conf->dns.blocking.mode.a, blockingmode);
 	}

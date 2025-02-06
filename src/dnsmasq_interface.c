@@ -292,6 +292,13 @@ size_t _FTL_make_answer(struct dns_header *header, char *limit, const size_t len
 			log_debug(DEBUG_QUERIES, "Configured blocking mode is NODATA%s",
 				     config.dns.blocking.mode.v.blocking_mode == MODE_IP_NODATA_AAAA ? "-IPv6" : "");
 		}
+		else if (config.dns.blocking.mode.v.blocking_mode == MODE_CNAME)
+		{
+			// If we block in CNAME mode, we set flags to CNAME
+			flags = F_CNAME;
+			if(config.debug & DEBUG_FLAGS)
+				logg("Configured blocking mode is CNAME");
+		}
 	}
 
 	// Check for regex redirecting
@@ -531,6 +538,18 @@ size_t _FTL_make_answer(struct dns_header *header, char *limit, const size_t len
 			log_query(flags & ~F_IPV4, name, &addr, (char*)blockingreason, 0);
 	}
 
+	if (flags & F_CNAME)
+	{
+		// Add CNAME answer record
+		header->ancount = htons(ntohs(header->ancount) + 1);
+		// if (add_resource_record(header, limit, &trunc, nameoffset, &ansp, 
+		// 		      daemon->auth_ttl, &nameoffset,
+		// 		      T_CNAME, C_IN, "d", name))
+		if(add_resource_record(header, limit, &trunc, sizeof(struct dns_header),
+		                       &p, daemon->block_ttl, NULL, T_CNAME, C_IN, "d", config.dns.reply.blocking.cname.v.s))
+			log_query(flags, name, NULL, (char*)blockingreason, 0);
+	}
+
 	// Log empty replies
 	if(!(flags & (F_IPV4 | F_IPV6)))
 	{
@@ -544,8 +563,8 @@ size_t _FTL_make_answer(struct dns_header *header, char *limit, const size_t len
 		}
 		else
 		{
-			// NODATA/NXDOMAIN
-			// gravity blocked abc.com is NODATA/NXDOMAIN
+			// NODATA/NXDOMAIN/CNAME
+			// gravity blocked abc.com is NODATA/NXDOMAIN/CNAME
 			log_query(flags, name, NULL, (char*)blockingreason, 0);
 		}
 	}

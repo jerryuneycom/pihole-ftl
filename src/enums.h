@@ -87,7 +87,8 @@ enum blocking_mode {
 	MODE_NULL,
 	MODE_IP_NODATA_AAAA,
 	MODE_NODATA,
-	MODE_MAX
+	MODE_MAX,
+	MODE_CNAME
 } __attribute__ ((packed));
 
 enum regex_type {

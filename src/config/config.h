@@ -175,6 +175,7 @@ struct config {
 				struct conf_item v4;
 				struct conf_item force6;
 				struct conf_item v6;
+				struct conf_item cname;
 			} blocking;
 		} reply;
 		struct {

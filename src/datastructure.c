@@ -897,6 +897,8 @@ const char * __attribute__ ((const)) get_blocking_mode_str(const enum blocking_m
 			return "IP_NODATA_AAAA";
 		case MODE_NODATA:
 			return "NODATA";
+		case MODE_CNAME:
+			return "CNAME";
 		case MODE_MAX:
 		default:
 			return "N/A";
