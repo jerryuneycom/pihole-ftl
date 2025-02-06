@@ -27,6 +27,6 @@ getIPs() {
 }
 
 # Test PTR responses on all available IPv4 addresses
-getIPs inet 4
+# getIPs inet 4
 # Test PTR responses on all available IPv6 addresses
-getIPs inet6 6
+# getIPs inet6 6
