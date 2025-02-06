@@ -47,6 +47,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+      discussions: write
+
     needs: smoke-tests
 
     container: ghcr.io/pi-hole/ftl-build:v1.26-${{ matrix.arch }}
@@ -128,4 +132,3 @@ jobs:
           files: |
             ${{ matrix.bin_name }}
             ${{ matrix.bin_name }}.sha1
-          token: ${{ secrets.CUSTOM_GITHUB_TOKEN }}
