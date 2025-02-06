@@ -296,8 +296,7 @@ size_t _FTL_make_answer(struct dns_header *header, char *limit, const size_t len
 		{
 			// If we block in CNAME mode, we set flags to CNAME
 			flags = F_CNAME;
-			if(config.debug & DEBUG_FLAGS)
-				logg("Configured blocking mode is CNAME");
+			log_debug(DEBUG_QUERIES, "Configured blocking mode is CNAME");
 		}
 	}
 
@@ -540,15 +539,20 @@ size_t _FTL_make_answer(struct dns_header *header, char *limit, const size_t len
 
 	if (flags & F_CNAME)
 	{
-		char *cname = (char*)malloc(strlen(config.dns.reply.blocking.cname.v.s) + 1);
 		// Add CNAME answer record
+		// Convert const char* from config.dns.reply.block_cname to char*
+		// char* cname = malloc(strlen(config.dns.reply.blocking.cname.v.s) + 1);
+		// strcpy(cname, config.dns.reply.blocking.cname.v.s);
 		header->ancount = htons(ntohs(header->ancount) + 1);
 		// if (add_resource_record(header, limit, &trunc, nameoffset, &ansp, 
 		// 		      daemon->auth_ttl, &nameoffset,
 		// 		      T_CNAME, C_IN, "d", name))
 		if(add_resource_record(header, limit, &trunc, sizeof(struct dns_header),
-		                       &p, daemon->block_ttl, NULL, T_CNAME, C_IN, "d", cname))
+		                       &p, daemon->local_ttl, NULL, T_CNAME, C_IN, (char*)"d", (char*)config.dns.reply.blocking.cname.v.s))
 			log_query(flags, name, NULL, (char*)blockingreason, 0);
+
+		// Free the memory
+		// free(cname);
 	}
 
 	// Log empty replies
