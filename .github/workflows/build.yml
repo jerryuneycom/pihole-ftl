@@ -1,10 +1,6 @@
 name: Build, Test, Deploy
 
 on:
-  push:
-    branches:
-      - '**'
-  pull_request:
   release:
     types: [published]
 
@@ -119,10 +115,16 @@ jobs:
           mv pihole-FTL "${{ matrix.bin_name }}"
           sha1sum pihole-FTL-* > ${{ matrix.bin_name }}.sha1
       -
-        name: Upload artifacts to job for later processing
-        if: github.event_name != 'pull_request'
-        uses: actions/upload-artifact@v4
+        # name: Upload artifacts to job for later processing
+        # if: github.event_name != 'release'
+        # uses: actions/upload-artifact@v4
+        # with:
+        #   name: ${{ inputs.artifact_name }}
+        #   path: '${{ matrix.bin_name }}*'
+      -
+        name: Attach binaries to release
+        if: inputs.event_name == 'release'
+        uses: softprops/action-gh-release@v2
         with:
-          name: tmp-binary-storage-jerry
-          path: '${{ matrix.bin_name }}*'
-          overwrite: true
+          files: |
+            '${{ matrix.bin_name }}*'
