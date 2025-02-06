@@ -306,6 +306,9 @@ void read_FTLconf(void)
 		case MODE_IP:
 			logg("   BLOCKINGMODE: Pi-hole's IPs for blocked domains");
 			break;
+		case MODE_CNAME:
+			logg("   BLOCKINGMODE: CNAME for blocked domains");
+			break;
 	}
 
 	// ANALYZE_ONLY_A_AND_AAAA
@@ -569,6 +572,19 @@ void read_FTLconf(void)
 	}
 	else
 		logg("   BLOCK_IPV6: Automatic interface-dependent detection of address");
+
+	// CNAME_BLOCKING
+	// Use a specific CNAME for blocked queries
+	// defaults to: not set
+	buffer = parse_FTLconf(fp, "CNAME_BLOCKING");
+	if(buffer != NULL)
+	{
+		if(config.reply_addr.cname_blocking != NULL)
+			free(config.reply_addr.cname_blocking);
+
+		config.reply_addr.cname_blocking = strdup(buffer);
+		logg("   CNAME_BLOCKING: Using CNAME %s for blocked queries", config.reply_addr.cname_blocking);
+	}
 
 	// REPLY_ADDR4 (deprecated setting)
 	// Use a specific IP address instead of automatically detecting the
@@ -955,6 +971,8 @@ void get_blocking_mode(FILE *fp)
 			config.blockingmode = MODE_IP;
 		else if(strcasecmp(buffer, "NODATA") == 0)
 			config.blockingmode = MODE_NODATA;
+		else if(strcasecmp(buffer, "CNAME") == 0)
+			config.blockingmode = MODE_CNAME;
 		else
 			logg("Ignoring unknown blocking mode, fallback is NULL blocking");
 	}

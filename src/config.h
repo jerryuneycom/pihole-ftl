@@ -91,6 +91,7 @@ typedef struct {
 			struct in_addr v4;
 			struct in6_addr v6;
 		} ip_blocking;
+		char* cname_blocking;
 	} reply_addr;
 } ConfigStruct;
 
