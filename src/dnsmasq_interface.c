@@ -540,13 +540,14 @@ size_t _FTL_make_answer(struct dns_header *header, char *limit, const size_t len
 
 	if (flags & F_CNAME)
 	{
+		char *cname = (char*)malloc(strlen(config.dns.reply.blocking.cname.v.s) + 1);
 		// Add CNAME answer record
 		header->ancount = htons(ntohs(header->ancount) + 1);
 		// if (add_resource_record(header, limit, &trunc, nameoffset, &ansp, 
 		// 		      daemon->auth_ttl, &nameoffset,
 		// 		      T_CNAME, C_IN, "d", name))
 		if(add_resource_record(header, limit, &trunc, sizeof(struct dns_header),
-		                       &p, daemon->block_ttl, NULL, T_CNAME, C_IN, "d", config.dns.reply.blocking.cname.v.s))
+		                       &p, daemon->block_ttl, NULL, T_CNAME, C_IN, "d", cname))
 			log_query(flags, name, NULL, (char*)blockingreason, 0);
 	}
 
