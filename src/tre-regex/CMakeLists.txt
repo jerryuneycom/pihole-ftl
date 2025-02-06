@@ -27,6 +27,4 @@ set(sources
 	)
 
 add_library(tre-regex OBJECT ${sources})
-if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
-	target_compile_options(tre-regex PRIVATE -Wno-maybe-uninitialized -Wno-unused-value -Wno-empty-body)
-endif()
+target_compile_options(tre-regex PRIVATE -Wno-maybe-uninitialized -Wno-unused-value)

@@ -62,8 +62,4 @@ for dir in "${path[@]}"; do
 done
 
 sftp -r -b - "${USER}"@"${HOST}" <<< "cd ${old_path}
--mkdir ./docs
--mkdir ./docs/external
--mkdir ./docs/images
--mkdir ./docs/specs
 put ${SOURCE_DIR}/* ./"

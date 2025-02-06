@@ -8,9 +8,9 @@
 *  This file is copyright under the latest version of the EUPL.
 *  Please see LICENSE file for your rights under this license. */
 
-#include "FTL.h"
+#include "../FTL.h"
 //#include "syscalls.h" is implicitly done in FTL.h
-#include "log.h"
+#include "../log.h"
 
 // itoa implementation using only static memory
 // taken from Kernighan and Ritchie's "The C Programming Language"
@@ -41,9 +41,10 @@ static void itoa(int n, char s[])
 
 	// Reverse string s in place
 	int j;
+	char c;
 	int len = strlen(s);
 	for (i = 0, j = len-1; i<j; i++, j--) {
-		const char c = s[i];
+		c = s[i];
 		s[i] = s[j];
 		s[j] = c;
 	}

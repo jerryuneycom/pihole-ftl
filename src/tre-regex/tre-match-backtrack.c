@@ -29,6 +29,9 @@
 
 */
 
+#include "tre-config.h"
+#include "tre-internal.h"
+
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -114,13 +117,11 @@ typedef struct tre_backtrack_struct {
 #ifdef TRE_USE_ALLOCA
 #define tre_bt_mem_new		  tre_mem_newa
 #define tre_bt_mem_alloc	  tre_mem_alloca
-#define tre_bt_mem_destroy(obj)	  do { } while (0)
-#define xafree(obj)		  /* do nothing, obj was obtained with alloca() */
+#define tre_bt_mem_destroy(obj)	  do { } while (0,0)
 #else /* !TRE_USE_ALLOCA */
 #define tre_bt_mem_new		  tre_mem_new
 #define tre_bt_mem_alloc	  tre_mem_alloc
 #define tre_bt_mem_destroy	  tre_mem_destroy
-#define xafree(obj)		  xfree(obj)
 #endif /* !TRE_USE_ALLOCA */
 
 
@@ -136,11 +137,11 @@ typedef struct tre_backtrack_struct {
 	    {								      \
 	      tre_bt_mem_destroy(mem);					      \
 	      if (tags)							      \
-		xafree(tags);						      \
+		xfree(tags);						      \
 	      if (pmatch)						      \
-		xafree(pmatch);						      \
+		xfree(pmatch);						      \
 	      if (states_seen)						      \
-		xafree(states_seen);					      \
+		xfree(states_seen);					      \
 	      return REG_ESPACE;					      \
 	    }								      \
 	  s->prev = stack;						      \
@@ -151,11 +152,11 @@ typedef struct tre_backtrack_struct {
 	    {								      \
 	      tre_bt_mem_destroy(mem);					      \
 	      if (tags)							      \
-		xafree(tags);						      \
+		xfree(tags);						      \
 	      if (pmatch)						      \
-		xafree(pmatch);						      \
+		xfree(pmatch);						      \
 	      if (states_seen)						      \
-		xafree(states_seen);					      \
+		xfree(states_seen);					      \
 	      return REG_ESPACE;					      \
 	    }								      \
 	  stack->next = s;						      \
@@ -426,7 +427,7 @@ tre_tnfa_run_backtrack(const tre_tnfa_t *tnfa, const void *string,
 	  DPRINT(("  should match back reference %d\n", bt));
 	  /* Get the substring we need to match against.  Remember to
 	     turn off REG_NOSUB temporarily. */
-	  tre_fill_pmatch(bt + 1, pmatch, tnfa->cflags & ~REG_NOSUB,
+	  tre_fill_pmatch(bt + 1, pmatch, tnfa->cflags & /*LINTED*/!REG_NOSUB,
 			  tnfa, tags, pos);
 	  so = pmatch[bt].rm_so;
 	  eo = pmatch[bt].rm_eo;
@@ -602,7 +603,7 @@ tre_tnfa_run_backtrack(const tre_tnfa_t *tnfa, const void *string,
 	  if (stack->prev)
 	    {
 	      DPRINT(("	 backtracking\n"));
-	      if (stack->item.state->assertions & ASSERT_BACKREF)
+	      if (stack->item.state->assertions && ASSERT_BACKREF)
 		{
 		  DPRINT(("  states_seen[%d] = 0\n",
 			  stack->item.state_id));
@@ -657,11 +658,11 @@ tre_tnfa_run_backtrack(const tre_tnfa_t *tnfa, const void *string,
   tre_bt_mem_destroy(mem);
 #ifndef TRE_USE_ALLOCA
   if (tags)
-    xafree(tags);
+    xfree(tags);
   if (pmatch)
-    xafree(pmatch);
+    xfree(pmatch);
   if (states_seen)
-    xafree(states_seen);
+    xfree(states_seen);
 #endif /* !TRE_USE_ALLOCA */
 
   return ret;

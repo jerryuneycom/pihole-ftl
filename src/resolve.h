@@ -11,9 +11,7 @@
 #define RESOLVE_H
 
 void *DNSclient_thread(void *val);
-int create_socket(bool tcp, struct sockaddr_in *dest);
-char *resolveHostname(const int sock, const bool tcp, struct sockaddr_in *dest,
-                      const char *addr, const bool force, bool *truncated) __attribute__((malloc));
+char *resolveHostname(const char *addr);
 bool resolve_names(void) __attribute__((pure));
 bool resolve_this_name(const char *ipaddr) __attribute__((pure));
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Skip tests on targets not supporting them
-if [[ ${TEST} == "false" ]]; then
+# Only run tests on x86_* targets (where the CI can natively run the binaries)
+if [[ ${CI} == "true" && "${CI_ARCH}" != "x86_"* ]]; then
   echo "Skipping tests (CI_ARCH: ${CI_ARCH})!"
   exit 0
 fi
@@ -20,17 +20,14 @@ while pidof -s pihole-FTL > /dev/null; do
 done
 
 # Clean up possible old files from earlier test runs
-rm -rf /etc/pihole /var/log/pihole /dev/shm/FTL-*
+rm -f /etc/pihole/gravity.db /etc/pihole/pihole-FTL.db /var/log/pihole/pihole.log /var/log/pihole/FTL.log /dev/shm/FTL-*
 
 # Create necessary directories and files
-mkdir -p /home/pihole /etc/pihole /run/pihole /var/log/pihole /etc/pihole/config_backups /var/www/html
+mkdir -p /home/pihole /etc/pihole /run/pihole /var/log/pihole
 echo "" > /var/log/pihole/FTL.log
 echo "" > /var/log/pihole/pihole.log
-echo "" > /var/log/pihole/webserver.log
 touch /run/pihole-FTL.pid dig.log ptr.log
-touch /etc/pihole/dhcp.leases
-chown -R pihole:pihole /etc/pihole /run/pihole /var/log/pihole
-chown pihole:pihole /run/pihole-FTL.pid
+chown pihole:pihole /etc/pihole /run/pihole /var/log/pihole/pihole.log /var/log/pihole/FTL.log /run/pihole-FTL.pid
 
 # Copy binary into a location the new user pihole can access
 cp ./pihole-FTL /home/pihole/pihole-FTL
@@ -47,24 +44,14 @@ rm -rf /etc/pihole/pihole-FTL.db
 ./pihole-FTL sqlite3 /etc/pihole/pihole-FTL.db < test/pihole-FTL.db.sql
 chown pihole:pihole /etc/pihole/pihole-FTL.db
 
-# Prepare TLS key and certificate
-cp test/test.pem /etc/pihole/test.pem
-cp test/test.crt /etc/pihole/test.crt
+# Prepare setupVars.conf
+echo "BLOCKING_ENABLED=true" > /etc/pihole/setupVars.conf
 
-# Prepare pihole.toml
-cp test/pihole.toml /etc/pihole/pihole.toml
-chown pihole:pihole /etc/pihole/pihole.toml
+# Prepare pihole-FTL.conf
+cp test/pihole-FTL.conf /etc/pihole/pihole-FTL.conf
 
-# Prepare 01-pihole-tests.conf
-mkdir /etc/dnsmasq.d
-cp test/01-pihole-tests.conf /etc/dnsmasq.d/01-pihole-tests.conf
-
-# Prepare versions file (read by /api/version)
-cp test/versions /etc/pihole/versions
-
-# Prepare Lua test script
-cp test/broken_lua.lp /var/www/html/broken_lua.lp
-cp test/broken_lua_2.lp /var/www/html/broken_lua_2.lp
+# Prepare dnsmasq.conf
+cp test/dnsmasq.conf /etc/dnsmasq.conf
 
 # Prepare local powerDNS resolver
 bash test/pdns/setup.sh
@@ -72,14 +59,6 @@ bash test/pdns/setup.sh
 # Set restrictive umask
 OLDUMASK=$(umask)
 umask 0022
-
-# Set exemplary config value by environment variable
-export FTLCONF_misc_nice="-11"
-export FTLCONF_dns_upstrrr="-11"
-export FTLCONF_debug_api="not_a_bool"
-
-# Prepare gdb session
-echo "handle SIGHUP nostop SIGPIPE nostop SIGTERM nostop SIG32 nostop SIG33 nostop SIG34 nostop SIG35 nostop SIG41 nostop" > /root/.gdbinit
 
 # Start FTL
 if ! su pihole -s /bin/sh -c /home/pihole/pihole-FTL; then
@@ -97,10 +76,6 @@ fi
 # Give FTL some time for startup preparations
 sleep 2
 
-# Attach debugger and immediately continue running the binary
-# In case a non-ignored signal occurs (a crash), create a full backtrace
-gdb -p $(cat /run/pihole-FTL.pid) --ex continue --ex "bt full" &
-
 # Print versions of pihole-FTL
 echo -n "FTL version (DNS): "
 dig TXT CHAOS version.FTL @127.0.0.1 +short
@@ -109,11 +84,8 @@ echo "FTL verbose version (CLI): "
 echo -n "Contained dnsmasq version (DNS): "
 dig TXT CHAOS version.bind @127.0.0.1 +short
 
-# Install py3-dnspython
-apk add --no-cache py3-dnspython
-
 # Run tests
-$BATS -p "test/test_suite.bats"
+$BATS "test/test_suite.bats"
 RET=$?
 
 curl_to_tricorder() {
@@ -132,33 +104,20 @@ if [[ $RET != 0 ]]; then
   echo ""
   echo -n "ptr.log: "
   curl_to_tricorder ./ptr.log
-  echo ""
-  echo -n "webserver.log: "
-  curl_to_tricorder /var/log/pihole/webserver.log
-  echo ""
-  echo -n "pihole.toml: "
-  curl_to_tricorder /etc/pihole/pihole.toml
+  echo ""getallqueries
+  echo -n "getallqueries.log: "
+  curl_to_tricorder ./getallqueries.log
   echo ""
 fi
 
 # Kill pihole-FTL after having completed tests
-# This will also shut down the debugger
 kill "$(pidof pihole-FTL)"
 
 # Restore umask
 umask "$OLDUMASK"
 
-# Run performance tests
-if ! su pihole -s /bin/sh -c "/home/pihole/pihole-FTL --perf"; then
-  echo "pihole-FTL --perf failed to start"
-fi
-
 # Remove copied file
 rm /home/pihole/pihole-FTL
-
-# Stop local powerDNS resolver
-killall pdns_server
-killall pdns_recursor
 
 # Exit with return code of bats tests
 exit $RET
