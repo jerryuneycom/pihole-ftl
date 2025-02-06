@@ -126,4 +126,4 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            '${{ matrix.bin_name }}*'
+            ${{ matrix.bin_name }}*
