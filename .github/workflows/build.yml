@@ -114,7 +114,7 @@ jobs:
         run: |
           mv pihole-FTL "${{ matrix.bin_name }}"
           sha1sum pihole-FTL-* > ${{ matrix.bin_name }}.sha1
-      -
+      # -
         # name: Upload artifacts to job for later processing
         # if: github.event_name != 'release'
         # uses: actions/upload-artifact@v4
